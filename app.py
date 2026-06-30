@@ -29,7 +29,8 @@ def init_db():
                 signal_1_score REAL,
                 signal_2_score REAL,
                 appeal_reason TEXT,
-                status TEXT
+                status TEXT,
+                event_type TEXT
             )
         """)
         conn.execute("""
@@ -50,8 +51,8 @@ def init_db():
 def log_event(entry):
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute(
-            "INSERT INTO audit_log (content_id, creator_id, timestamp, attribution, confidence, signal_1_score, signal_2_score, appeal_reason, status) "
-            "VALUES (:content_id, :creator_id, :timestamp, :attribution, :confidence, :signal_1_score, :signal_2_score, :appeal_reason, :status)",
+            "INSERT INTO audit_log (content_id, creator_id, timestamp, attribution, confidence, signal_1_score, signal_2_score, appeal_reason, status, event_type) "
+            "VALUES (:content_id, :creator_id, :timestamp, :attribution, :confidence, :signal_1_score, :signal_2_score, :appeal_reason, :status, :event_type)",
             {**entry, "timestamp": datetime.now(timezone.utc).isoformat()},
         )
 
@@ -107,8 +108,8 @@ def update_submission_appeal(content_id, creator_id, appeal_reason):
 def log_appeal(content_id, creator_id, appeal_reason):
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute(
-            "INSERT INTO audit_log (content_id, creator_id, timestamp, attribution, confidence, signal_1_score, signal_2_score, appeal_reason, status) "
-            "VALUES (:content_id, :creator_id, :timestamp, :attribution, :confidence, :signal_1_score, :signal_2_score, :appeal_reason, :status)",
+            "INSERT INTO audit_log (content_id, creator_id, timestamp, attribution, confidence, signal_1_score, signal_2_score, appeal_reason, status, event_type) "
+            "VALUES (:content_id, :creator_id, :timestamp, :attribution, :confidence, :signal_1_score, :signal_2_score, :appeal_reason, :status, :event_type)",
             {
                 "content_id": content_id,
                 "creator_id": creator_id,
@@ -119,6 +120,7 @@ def log_appeal(content_id, creator_id, appeal_reason):
                 "signal_2_score": None,
                 "appeal_reason": appeal_reason,
                 "status": "under_review",
+                "event_type": "appeal_submitted",
             },
         )
 
@@ -191,7 +193,8 @@ def submit():
         "signal_1_score": result["signal_1_score"],
         "signal_2_score": result["signal_2_score"],
         "appeal_reason": None,
-        "status": "classified"
+        "status": "classified",
+        "event_type": "classification_completed"
     })
     return jsonify(result)
 
@@ -230,7 +233,8 @@ def appeal():
         "signal_1_score": submission.get("signal_1_score"),
         "signal_2_score": submission.get("signal_2_score"),
         "appeal_reason": appeal_reason,
-        "status": "under_review"
+        "status": "under_review",
+        "event_type": "appeal_submitted"
     })
 
     return jsonify({
@@ -248,5 +252,3 @@ def get_log():
 if __name__ == "__main__":
     init_db()
     app.run(port=5000, debug=True)
-
-

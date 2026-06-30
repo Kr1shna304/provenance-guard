@@ -3,12 +3,16 @@ import os
 import re
 import sqlite3
 from datetime import datetime, timezone
+from dotenv import load_dotenv
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 LLM_MODEL = os.getenv("LLM_MODEL", "llama-3.3-70b-versatile")
 DB_PATH = "audit_log.db"
 
-_groq_client = Groq(api_key=GROQ_API_KEY)
+_groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 
 
 def compute_signal_1(text: str) -> float:
@@ -53,6 +57,9 @@ TEXT TO ANALYZE:
 {text}
 <<<END_TEXT>>>
 """
+
+    if not _groq_client:
+        return 0.5
 
     response = _groq_client.chat.completions.create(
         model=LLM_MODEL,
