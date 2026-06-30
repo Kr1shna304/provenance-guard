@@ -1,5 +1,5 @@
 import uuid
-from flask import Flask, request, jsonify 
+from flask import Flask, request, jsonify, render_template
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import sqlite3
@@ -127,7 +127,7 @@ def log_appeal(content_id, creator_id, appeal_reason):
 
 @app.route("/")
 def home():
-    return "Provenance Guard is running."
+    return render_template("index.html")
 
 
 @app.route("/submit", methods=["POST"])
